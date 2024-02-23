@@ -1,11 +1,12 @@
 package com.github.olorini.db;
 
+import com.github.olorini.endpoints.pojo.Drone;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
 public class DroneEntity {
-
     private Long id;
     private String serialNumber;
     private String model;
@@ -22,13 +23,13 @@ public class DroneEntity {
         setState(resultSet.getString(5));
     }
 
-//    public DroneEntity(Drone source) {
-//        setSerialNumber(source.getSerialNumber());
-//        setModel(source.getModel().name());
-//        setWeightLimit(source.getWeightLimit());
-//        setBatteryCapacity(source.getBatteryCapacity());
-//        setState(source.getState().name());
-//    }
+    public DroneEntity(Drone source) {
+        setSerialNumber(source.getSerialNumber());
+        setModel(source.getModel().name());
+        setWeightLimit(source.getWeightLimit());
+        setBatteryCapacity(source.getBatteryCapacity());
+        setState(source.getState().name());
+    }
 
     public Long getId() {
         return id;

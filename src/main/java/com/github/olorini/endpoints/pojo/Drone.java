@@ -1,15 +1,17 @@
-package com.github.olorini.pojo;
+package com.github.olorini.endpoints.pojo;
 
 import com.github.olorini.db.DroneEntity;
-
+import javax.xml.bind.annotation.XmlRootElement;
 import static org.apache.commons.lang3.EnumUtils.getEnumIgnoreCase;
 
+@XmlRootElement
 public class Drone {
 	private Long id;
 	private String serialNumber;
 	private Model model;
 	private int weightLimit;
 	private int batteryCapacity;
+
 	private State state;
 
 	public Drone() { }
