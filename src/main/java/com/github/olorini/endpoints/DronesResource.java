@@ -7,10 +7,7 @@ import com.github.olorini.endpoints.pojo.Medication;
 import com.github.olorini.services.DronesService;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
@@ -37,20 +34,20 @@ public class DronesResource {
     }
 
     @POST
+    @Consumes("application/json")
     @Produces("application/json")
     @Path("/register")
     public Map<String, Long> registerDrone(Drone request) throws BadRequestException {
-        Long id = service.register(request);
+        Long id = service.registerNewDrone(request);
         return Collections.singletonMap("id", id);
     }
 
     @POST
+    @Consumes("application/json")
     @Path("/load")
     public Response loadDrone(Load request) {
-        //service.load(request);
+        service.loadDrone(request);
         return Response.ok().build();
     }
-
-
 
 }

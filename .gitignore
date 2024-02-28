@@ -11,4 +11,4 @@ log.0.0.txt
 log.0.0.txt.lck
 example.log
 example.log.1
-/db/h2db2.trace.db
+/src/main/webapp/WEB-INF/data/*.trace.db

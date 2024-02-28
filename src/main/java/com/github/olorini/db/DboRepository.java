@@ -1,14 +1,13 @@
 package com.github.olorini.db;
 
 import com.github.olorini.core.AppContext;
+import com.github.olorini.db.dao.DroneEntity;
+import com.github.olorini.db.dao.LoadEntity;
+import com.github.olorini.db.dao.MedicationEntity;
 import org.apache.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class DboRepository {
     private final Logger LOGGER = Logger.getLogger(DboRepository.class);
@@ -65,6 +64,7 @@ public class DboRepository {
             " VALUES (?,?,?,?,?)";
     public Long saveDrone(DroneEntity drone) throws DboException {
         try (Connection conn = AppContext.getConnection()) {
+            conn.setAutoCommit(false);
             PreparedStatement statement = conn.prepareStatement(SAVE_DRONE_SQL, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, drone.getBatteryCapacity());
             statement.setString(2, drone.getModel());
@@ -77,7 +77,91 @@ public class DboRepository {
             }
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                   return generatedKeys.getLong(1);
+                    Long result = generatedKeys.getLong(1);
+                    conn.commit();
+                    return result;
+                } else {
+                    throw new DboException("Creating record failed, no ID obtained");
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+    }
+
+    private static final String SAVE_DRONE_STATE_SQL =
+            "UPDATE drones SET state = ? WHERE id = ?";
+    public void saveDroneState(Long droneId, String state) throws DboException {
+        try (Connection conn = AppContext.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement(SAVE_DRONE_STATE_SQL);
+            statement.setString(1, state);
+            statement.setLong(2, droneId);
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                throw new DboException("Updating record failed, no rows affected");
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+    }
+
+    private static final String FIND_DRONE_SQL = "SELECT id,battery_capacity,model,serial_number,state,weight_limit" +
+            " FROM DRONES WHERE id = ?";
+    public Optional<DroneEntity> findDroneById(Long id) throws DboException {
+        try (Connection conn = AppContext.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(FIND_DRONE_SQL);
+            ps.setLong(1, id);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                return (resultSet.next()) ? Optional.of(new DroneEntity(resultSet)) : Optional.empty();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+    }
+
+    public List<MedicationEntity> findMedication(Set<Long> ids) throws DboException {
+        List<MedicationEntity> result = new ArrayList<>();
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT id,code,name,weight FROM medication");
+        if (ids != null && !ids.isEmpty()) {
+            query.append(DboTools.getIn("id", ids.size()));
+        }
+        try (Connection conn = AppContext.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(query.toString());
+            if (ids != null && !ids.isEmpty()) {
+                int i = 1;
+                for (Long id : ids) {
+                    ps.setLong(i++, id);
+                }
+            }
+            try (ResultSet resultSet = ps.executeQuery()) {
+                while (resultSet.next()) {
+                    result.add(new MedicationEntity(resultSet));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+        return result;
+    }
+
+    private static final String SAVE_LOAD_SQL = "INSERT INTO LOADS (DRONE_ID,MEDICATION_ID) VALUES (?,?)";
+    public Long saveLoad(LoadEntity load) throws DboException {
+        try (Connection conn = AppContext.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement(SAVE_LOAD_SQL, Statement.RETURN_GENERATED_KEYS);
+            statement.setLong(1, load.getDrone().getId());
+            statement.setLong(2, load.getMedication().getId());
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                throw new DboException("Creating record failed, no rows affected");
+            }
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getLong(1);
                 } else {
                     throw new DboException("Creating record failed, no ID obtained");
                 }

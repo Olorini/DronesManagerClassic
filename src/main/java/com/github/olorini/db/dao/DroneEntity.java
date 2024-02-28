@@ -1,4 +1,4 @@
-package com.github.olorini.db;
+package com.github.olorini.db.dao;
 
 import com.github.olorini.endpoints.pojo.Drone;
 
@@ -25,10 +25,14 @@ public class DroneEntity {
 
     public DroneEntity(Drone source) {
         setSerialNumber(source.getSerialNumber());
-        setModel(source.getModel().name());
+        if (source.getModel() != null) {
+            setModel(source.getModel().name());
+        }
         setWeightLimit(source.getWeightLimit());
         setBatteryCapacity(source.getBatteryCapacity());
-        setState(source.getState().name());
+        if (source.getState() != null) {
+            setState(source.getState().name());
+        }
     }
 
     public Long getId() {

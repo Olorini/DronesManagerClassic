@@ -1,6 +1,6 @@
 package com.github.olorini.endpoints.pojo;
 
-import com.github.olorini.db.DroneEntity;
+import com.github.olorini.db.dao.DroneEntity;
 import javax.xml.bind.annotation.XmlRootElement;
 import static org.apache.commons.lang3.EnumUtils.getEnumIgnoreCase;
 

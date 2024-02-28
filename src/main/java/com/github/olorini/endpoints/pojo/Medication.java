@@ -1,6 +1,6 @@
 package com.github.olorini.endpoints.pojo;
 
-import com.github.olorini.db.MedicationEntity;
+import com.github.olorini.db.dao.MedicationEntity;
 
 public class Medication {
     private Long id;
