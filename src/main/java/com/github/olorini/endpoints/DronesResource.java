@@ -50,4 +50,26 @@ public class DronesResource {
         return Response.ok().build();
     }
 
+    @GET
+    @Produces("application/json")
+    @Path("/get_medication")
+    public List<Medication> getMedication(@QueryParam("drone_id") long droneId) {
+        return service.getMedication(droneId);
+    }
+
+    @GET
+    @Consumes("application/json")
+    @Path("/get_idle_drones")
+    public List<Drone> getIdleDrones() {
+        return service.getIdleDrones();
+    }
+
+    @GET
+    @Consumes("application/json")
+    @Path("/get_battery_level")
+    public Map<String, Integer> getBatteryLevel(long droneId) {
+        int batteryLevel = service.getBatteryLevel(droneId);
+        return Collections.singletonMap("batteryLevel", batteryLevel);
+    }
+
 }

@@ -2,15 +2,15 @@ package com.github.olorini.db.dao;
 
 public class LoadEntity {
     private Long id;
-    private DroneEntity drone;
+    private Long droneId;
 
-    private MedicationEntity medication;
+    private Long medicationId;
 
     public LoadEntity() { }
 
-    public LoadEntity(DroneEntity drone, MedicationEntity medication) {
-        this.drone = drone;
-        this.medication = medication;
+    public LoadEntity(Long droneId, Long medicationId) {
+        this.droneId = droneId;
+        this.medicationId = medicationId;
     }
 
     public Long getId() {
@@ -21,19 +21,19 @@ public class LoadEntity {
         this.id = id;
     }
 
-    public DroneEntity getDrone() {
-        return drone;
+    public Long getDroneId() {
+        return droneId;
     }
 
-    public void setDrone(DroneEntity drone) {
-        this.drone = drone;
+    public void setDroneId(Long droneId) {
+        this.droneId = droneId;
     }
 
-    public MedicationEntity getMedication() {
-        return medication;
+    public Long getMedicationId() {
+        return medicationId;
     }
 
-    public void setMedication(MedicationEntity medication) {
-        this.medication = medication;
+    public void setMedicationId(Long medicationId) {
+        this.medicationId = medicationId;
     }
 }

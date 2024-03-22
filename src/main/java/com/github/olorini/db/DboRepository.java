@@ -28,6 +28,24 @@ public class DboRepository {
         }
     }
 
+    public List<DroneEntity> findDroneByState(String state) throws DboException {
+        String query = "SELECT * FROM DRONES WHERE state = ?";
+        try(Connection conn = AppContext.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setString(1, state);
+            List<DroneEntity> result = new ArrayList<>();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    result.add(new DroneEntity(resultSet));
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+    }
+
     private static final String SELECT_MED_SQL = "SELECT * from MEDICATION";
     public List<MedicationEntity> getMedicine() throws DboException {
         try(Connection conn = AppContext.getConnection()) {
@@ -45,7 +63,8 @@ public class DboRepository {
         }
     }
 
-    private static final String EXIST_DRONE_SQL = "SELECT id FROM DRONES WHERE SERIAL_NUMBER = ?";
+    private static final String EXIST_DRONE_SQL = "SELECT id FROM DRONES" +
+            " WHERE SERIAL_NUMBER = ?";
     public boolean existsBySerialNumber(String serialNumber) throws DboException {
         try (Connection conn = AppContext.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(EXIST_DRONE_SQL);
@@ -149,12 +168,33 @@ public class DboRepository {
         return result;
     }
 
+    public List<MedicationEntity> findMedicationByDroneId(Long droneId) throws DboException {
+        List<MedicationEntity> result = new ArrayList<>();
+        String query = "SELECT M.id, M.code, M.name, M.weight" +
+                " FROM LOADS as L" +
+                " LEFT JOIN MEDICATION M on M.ID = L.MEDICATION_ID" +
+                " WHERE L.DRONE_ID = ?";
+        try (Connection conn = AppContext.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setLong(1, droneId);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                while (resultSet.next()) {
+                    result.add(new MedicationEntity(resultSet));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            throw new DboException(e.getMessage());
+        }
+        return result;
+    }
+
     private static final String SAVE_LOAD_SQL = "INSERT INTO LOADS (DRONE_ID,MEDICATION_ID) VALUES (?,?)";
     public Long saveLoad(LoadEntity load) throws DboException {
         try (Connection conn = AppContext.getConnection()) {
             PreparedStatement statement = conn.prepareStatement(SAVE_LOAD_SQL, Statement.RETURN_GENERATED_KEYS);
-            statement.setLong(1, load.getDrone().getId());
-            statement.setLong(2, load.getMedication().getId());
+            statement.setLong(1, load.getDroneId());
+            statement.setLong(2, load.getMedicationId());
             int affectedRows = statement.executeUpdate();
             if (affectedRows == 0) {
                 throw new DboException("Creating record failed, no rows affected");

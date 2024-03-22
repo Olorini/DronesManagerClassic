@@ -2,7 +2,6 @@ package com.github.olorini.db.dao;
 
 import com.github.olorini.db.DboTools;
 
-import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -17,14 +16,13 @@ public class MedicationEntity {
     public MedicationEntity() {}
 
     public MedicationEntity(ResultSet resultSet) throws SQLException {
-        int i = 1;
-        setId(resultSet.getLong(i++));
-        setCode(resultSet.getString(i++));
+        setId(resultSet.getLong("id"));
+        setCode(resultSet.getString("code"));
         if (DboTools.hasColumn(resultSet, "image")) {
-            setImage(resultSet.getBytes(i++));
+            setImage(resultSet.getBytes("image"));
         }
-        setName(resultSet.getString(i++));
-        setWeight(resultSet.getInt(i));
+        setName(resultSet.getString("name"));
+        setWeight(resultSet.getInt("weight"));
     }
 
     public Long getId() {

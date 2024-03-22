@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import static com.github.olorini.core.exceptions.WebErrorCode.REQUEST_ERROR;
 
 public class DronesService {
+
     @Context
     ServletContext servletContext;
     DboRepository dboRepository = new DboRepository();
@@ -65,7 +66,6 @@ public class DronesService {
         } catch (DboException e) {
             throw new WebServiceException(e);
         }
-
     }
 
     public void loadDrone(Load request) {
@@ -99,8 +99,7 @@ public class DronesService {
                 throw new BadRequestException(REQUEST_ERROR, "Weight of medicine is very large");
             }
             for (Long medicationId : request.getMedicineIds()) {
-                MedicationEntity medication = medicationEntities.get(medicationId);
-                Long id = dboRepository.saveLoad(new LoadEntity(droneEntity, medication));
+                Long id = dboRepository.saveLoad(new LoadEntity(droneEntity.getId(), medicationId));
                 result.add(id);
             }
             if (!result.isEmpty()) {
@@ -108,6 +107,40 @@ public class DronesService {
             } else {
                 saveDroneState(State.IDLE, droneEntity);
             }
+        } catch (DboException e) {
+            throw new WebServiceException(e);
+        }
+    }
+
+    public List<Medication> getMedication(long droneId) {
+        try {
+            List<MedicationEntity> loads = dboRepository.findMedicationByDroneId(droneId);
+            return loads.stream()
+                    .map(Medication::new)
+                    .collect(Collectors.toList());
+        } catch (DboException e) {
+            throw new WebServiceException(e);
+        }
+    }
+
+    public List<Drone> getIdleDrones() {
+        try {
+            List<DroneEntity> drones = dboRepository.findDroneByState(State.IDLE.name());
+            return drones.stream()
+                    .map(Drone::new)
+                    .collect(Collectors.toList());
+        } catch (DboException e) {
+            throw new WebServiceException(e);
+        }
+    }
+
+    public int getBatteryLevel(long droneId) {
+        try {
+            Optional<DroneEntity> droneEntity = dboRepository.findDroneById(droneId);
+            if (!droneEntity.isPresent()) {
+                throw new BadRequestException(REQUEST_ERROR, "Drone is not found");
+            }
+            return droneEntity.get().getBatteryCapacity();
         } catch (DboException e) {
             throw new WebServiceException(e);
         }
