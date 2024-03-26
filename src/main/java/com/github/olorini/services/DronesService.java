@@ -12,8 +12,6 @@ import com.github.olorini.endpoints.pojo.Medication;
 import com.github.olorini.endpoints.pojo.State;
 import org.apache.commons.lang3.EnumUtils;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
 import javax.xml.ws.WebServiceException;
 import java.util.*;
 import java.util.function.Function;
@@ -23,9 +21,16 @@ import static com.github.olorini.core.exceptions.WebErrorCode.REQUEST_ERROR;
 
 public class DronesService {
 
-    @Context
-    ServletContext servletContext;
-    DboRepository dboRepository = new DboRepository();
+    DboRepository dboRepository;
+
+    public DronesService() {
+        this(new DboRepository());
+    }
+
+    public DronesService(DboRepository dboRepository) {
+        this.dboRepository = dboRepository;
+    }
+
     public List<Drone> getDrones() {
         try {
             List<DroneEntity> drones = dboRepository.getDrones();

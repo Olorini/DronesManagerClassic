@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'war'
+    id 'jacoco'
 }
 
 group 'com.github.olorini'
@@ -13,9 +14,6 @@ repositories {
 ext {
     junitVersion = '5.8.2'
 }
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -36,10 +34,19 @@ dependencies {
 
     implementation 'com.h2database:h2:2.2.224'
 
+    testImplementation("org.mockito:mockito-core:2.23.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    //testImplementation 'junit:junit'
+    testImplementation 'junit:junit:4.13.1'
+
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 }
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
 }

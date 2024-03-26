@@ -22,7 +22,7 @@ public class Drone {
 		setModel(getEnumIgnoreCase(Model.class, source.getModel()));
 		setWeightLimit(source.getWeightLimit());
 		setBatteryCapacity(source.getBatteryCapacity());
-		setState(getEnumIgnoreCase(State.class, source.getModel()));
+		setState(getEnumIgnoreCase(State.class, source.getState()));
 	}
 
 	public String getSerialNumber() {

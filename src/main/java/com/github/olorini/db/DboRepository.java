@@ -27,7 +27,6 @@ public class DboRepository {
             throw new DboException(e.getMessage());
         }
     }
-
     public List<DroneEntity> findDroneByState(String state) throws DboException {
         String query = "SELECT * FROM DRONES WHERE state = ?";
         try(Connection conn = AppContext.getConnection()) {

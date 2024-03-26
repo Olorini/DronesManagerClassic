@@ -14,6 +14,8 @@ public class DroneEntity {
     private int batteryCapacity;
     private String state;
 
+    public DroneEntity() {}
+
     public DroneEntity(ResultSet resultSet) throws SQLException {
         setId(resultSet.getLong(1));
         setSerialNumber(resultSet.getString(4));
