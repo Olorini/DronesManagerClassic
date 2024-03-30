@@ -10,7 +10,7 @@ import com.github.olorini.endpoints.pojo.Drone;
 import com.github.olorini.endpoints.pojo.Load;
 import com.github.olorini.endpoints.pojo.Medication;
 import com.github.olorini.endpoints.pojo.State;
-import org.apache.commons.lang3.EnumUtils;
+import com.github.olorini.validators.*;
 
 import javax.xml.ws.WebServiceException;
 import java.util.*;
@@ -56,15 +56,10 @@ public class DronesService {
     public Long registerNewDrone(Drone request) {
         try {
             String serialNumber = request.getSerialNumber();
-            if (serialNumber == null || serialNumber.length() > 100) {
-                throw new BadRequestException(REQUEST_ERROR, "Serial number is too long");
-            }
-            if (request.getWeightLimit() > 500) {
-                throw new BadRequestException(REQUEST_ERROR, "Weight limit is very large");
-            }
-            if (dboRepository.existsBySerialNumber(serialNumber)) {
-                throw new BadRequestException(REQUEST_ERROR, "Drone with this serial number is already exist");
-            }
+            AndValidator validator = new AndValidator();
+            validator.add(new DroneWeightValidator(request.getWeightLimit()))
+                    .add(new DroneSerialNumberValidator(serialNumber, dboRepository));
+            forceCheck(validator);
             DroneEntity entity = new DroneEntity(request);
             request.setState(State.IDLE);
             return dboRepository.saveDrone(entity);
@@ -75,33 +70,22 @@ public class DronesService {
 
     public void loadDrone(Load request) {
         try {
-            List<Long> result = new ArrayList<>();
-            if (request.getDroneId() == null) {
-                throw new BadRequestException(REQUEST_ERROR, "Drone identifier is empty");
-            }
-            if (request.getMedicineIds() == null || request.getMedicineIds().isEmpty()) {
-                throw new BadRequestException(REQUEST_ERROR, "List of medicine identifiers are empty");
-            }
+            forceCheck(new LoadEmptyDataValidator(request.getDroneId(), request.getMedicineIds()));
             Optional<DroneEntity> dbDrone = dboRepository.findDroneById(request.getDroneId());
             if (!dbDrone.isPresent()) {
                 throw new BadRequestException(REQUEST_ERROR, "Drone is not found");
             }
             DroneEntity droneEntity = dbDrone.get();
-            checkDroneAvailableForLoading(droneEntity);
+            forceCheck(new DroneForLoadValidator(droneEntity));
             saveDroneState(State.LOADING, droneEntity);
             Set<Long> medicineIds = new HashSet<>(request.getMedicineIds());
             Map<Long, MedicationEntity> medicationEntities = dboRepository.findMedication(medicineIds)
                     .stream().collect(Collectors.toMap(MedicationEntity::getId, Function.identity()));
-            if (medicationEntities.isEmpty()) {
+            ValidationResult validationResult
+                    = new MedicineForLoadValidator(request.getMedicineIds(), medicationEntities, droneEntity).check();
+            if (!validationResult.isOk()) {
                 saveDroneState(State.IDLE, droneEntity);
-                throw new BadRequestException(REQUEST_ERROR, "Medicines are not found");
-            }
-            int weight = request.getMedicineIds().stream()
-                    .map(e -> medicationEntities.get(e).getWeight())
-                    .reduce(Integer::sum).orElse(Integer.MAX_VALUE);
-            if (weight > droneEntity.getWeightLimit()) {
-                saveDroneState(State.IDLE, droneEntity);
-                throw new BadRequestException(REQUEST_ERROR, "Weight of medicine is very large");
+                throw new BadRequestException(REQUEST_ERROR, validationResult.getMessage());
             }
             try {
                 for (Long medicationId : request.getMedicineIds()) {
@@ -151,12 +135,10 @@ public class DronesService {
         }
     }
 
-    private void checkDroneAvailableForLoading(DroneEntity droneEntity) {
-        if (EnumUtils.getEnumIgnoreCase(State.class, droneEntity.getState()) != State.IDLE) {
-            throw new BadRequestException(REQUEST_ERROR, "Drone is busy");
-        }
-        if (droneEntity.getBatteryCapacity() < 25) {
-            throw new BadRequestException(REQUEST_ERROR, "Drone isn't charged");
+    private void forceCheck(IValidator validator) throws DboException {
+        ValidationResult validationResult = validator.check();
+        if (!validationResult.isOk()) {
+            throw new BadRequestException(REQUEST_ERROR, validationResult.getMessage());
         }
     }
 
