@@ -79,7 +79,7 @@ public class DronesService {
             if (request.getDroneId() == null) {
                 throw new BadRequestException(REQUEST_ERROR, "Drone identifier is empty");
             }
-            if (request.getMedicineIds().isEmpty()) {
+            if (request.getMedicineIds() == null || request.getMedicineIds().isEmpty()) {
                 throw new BadRequestException(REQUEST_ERROR, "List of medicine identifiers are empty");
             }
             Optional<DroneEntity> dbDrone = dboRepository.findDroneById(request.getDroneId());
@@ -103,21 +103,21 @@ public class DronesService {
                 saveDroneState(State.IDLE, droneEntity);
                 throw new BadRequestException(REQUEST_ERROR, "Weight of medicine is very large");
             }
-            for (Long medicationId : request.getMedicineIds()) {
-                Long id = dboRepository.saveLoad(new LoadEntity(droneEntity.getId(), medicationId));
-                result.add(id);
-            }
-            if (!result.isEmpty()) {
+            try {
+                for (Long medicationId : request.getMedicineIds()) {
+                    dboRepository.saveLoad(new LoadEntity(droneEntity.getId(), medicationId));
+                }
                 saveDroneState(State.LOADED, droneEntity);
-            } else {
+            } catch (DboException e) {
                 saveDroneState(State.IDLE, droneEntity);
+                throw e;
             }
         } catch (DboException e) {
             throw new WebServiceException(e);
         }
     }
 
-    public List<Medication> getMedication(long droneId) {
+    public List<Medication> getMedicationForDrone(long droneId) {
         try {
             List<MedicationEntity> loads = dboRepository.findMedicationByDroneId(droneId);
             return loads.stream()

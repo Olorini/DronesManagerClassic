@@ -54,7 +54,7 @@ public class DronesResource {
     @Produces("application/json")
     @Path("/get_medication")
     public List<Medication> getMedication(@QueryParam("drone_id") long droneId) {
-        return service.getMedication(droneId);
+        return service.getMedicationForDrone(droneId);
     }
 
     @GET
