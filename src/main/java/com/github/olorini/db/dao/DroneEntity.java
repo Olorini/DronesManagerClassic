@@ -17,12 +17,12 @@ public class DroneEntity {
     public DroneEntity() {}
 
     public DroneEntity(ResultSet resultSet) throws SQLException {
-        setId(resultSet.getLong(1));
-        setSerialNumber(resultSet.getString(4));
-        setModel(resultSet.getString(3));
-        setWeightLimit(resultSet.getInt(6));
-        setBatteryCapacity(resultSet.getInt(2));
-        setState(resultSet.getString(5));
+        setId(resultSet.getLong("id"));
+        setSerialNumber(resultSet.getString("serial_number"));
+        setModel(resultSet.getString("model"));
+        setWeightLimit(resultSet.getInt("weight_limit"));
+        setBatteryCapacity(resultSet.getInt("battery_capacity"));
+        setState(resultSet.getString("state"));
     }
 
     public DroneEntity(Drone source) {

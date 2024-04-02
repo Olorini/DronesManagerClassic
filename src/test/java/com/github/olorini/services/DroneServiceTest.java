@@ -2,6 +2,7 @@ package com.github.olorini.services;
 
 import com.github.olorini.core.exceptions.BadRequestException;
 import com.github.olorini.db.DboException;
+import com.github.olorini.db.DboProcessException;
 import com.github.olorini.db.DboRepository;
 import com.github.olorini.db.dao.DroneEntity;
 import com.github.olorini.db.dao.MedicationEntity;
@@ -55,7 +56,7 @@ public class DroneServiceTest {
         assertEquals(medicationList.get(0).getWeight(), 10);
     }
     @Test
-    public void registerDroneFail() throws DboException {
+    public void registerDroneFail() throws DboException, DboProcessException {
         this.service = new DronesService(dboRepository);
         Drone reqDrone = new Drone();
         Exception ex;
@@ -69,12 +70,13 @@ public class DroneServiceTest {
         ex = assertThrowsExactly(BadRequestException.class, () -> service.registerNewDrone(reqDrone));
         assertEquals("Weight limit is very large", ex.getMessage());
         reqDrone.setWeightLimit(400);
-        Mockito.when(dboRepository.existsBySerialNumber("123")).thenReturn(true);
+        Mockito.when(dboRepository.saveDrone(any(DroneEntity.class)))
+                .thenThrow(new DboProcessException("Drone with this serial number is already exist"));
         ex = assertThrowsExactly(BadRequestException.class, () -> service.registerNewDrone(reqDrone));
         assertEquals("Drone with this serial number is already exist", ex.getMessage());
     }
     @Test
-    public void registerDroneSuccess() throws DboException {
+    public void registerDroneSuccess() throws DboException, DboProcessException {
         Mockito.when(dboRepository.saveDrone(any(DroneEntity.class))).thenReturn(1L);
         Mockito.when(dboRepository.existsBySerialNumber("123")).thenReturn(false);
         this.service = new DronesService(dboRepository);
